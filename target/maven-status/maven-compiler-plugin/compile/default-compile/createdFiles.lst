@@ -1,0 +1,11 @@
+com\musicbot\counting\CountingManager.class
+com\musicbot\counting\MathEvaluator.class
+com\musicbot\Main.class
+com\musicbot\counting\CountingManager$State.class
+com\musicbot\Config.class
+com\musicbot\music\AudioPlayerSendHandler.class
+com\musicbot\PlayResultHandler.class
+com\musicbot\music\TrackScheduler.class
+com\musicbot\CommandListener.class
+com\musicbot\music\MusicManager.class
+com\musicbot\music\GuildMusicManager.class
