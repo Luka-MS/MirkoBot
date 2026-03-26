@@ -27,14 +27,19 @@
             <id>lavalink-releases</id>
             <url>https://maven.lavalink.dev/releases</url>
         </repository>
+        <!-- libdave-jvm snapshots (fallback if Maven Central sync is delayed) -->
+        <repository>
+            <id>lavalink-snapshots</id>
+            <url>https://maven.lavalink.dev/snapshots</url>
+        </repository>
     </repositories>
 
     <dependencies>
-        <!-- JDA – Java Discord API -->
+        <!-- JDA – Java Discord API (6.3.2+ required for DAVE/E2EE voice protocol) -->
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.2.1</version>
+            <version>6.3.2</version>
             <!-- opus-java bundles native libs; JDA uses its own audio pipeline -->
             <exclusions>
                 <exclusion>
@@ -42,6 +47,24 @@
                     <artifactId>opus-java</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- libdave-jvm: DAVE protocol (E2EE) implementation for JDA voice -->
+        <dependency>
+            <groupId>moe.kyokobot.libdave</groupId>
+            <artifactId>adapter-jda</artifactId>
+            <version>ce725965e</version>
+        </dependency>
+        <dependency>
+            <groupId>moe.kyokobot.libdave</groupId>
+            <artifactId>impl-jni</artifactId>
+            <version>ce725965e</version>
+        </dependency>
+        <!-- Windows x86-64 native (.dll) for libdave -->
+        <dependency>
+            <groupId>moe.kyokobot.libdave</groupId>
+            <artifactId>natives-win-x86-64</artifactId>
+            <version>ce725965e</version>
         </dependency>
 
         <!-- LavaPlayer (arbjerg maintained fork) -->

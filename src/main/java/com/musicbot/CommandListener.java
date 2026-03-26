@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -105,11 +104,16 @@ public class CommandListener extends ListenerAdapter {
         AudioManager audioManager = guild.getAudioManager();
 
         // Join or move to the user's voice channel
-        if (!audioManager.isConnected()) {
-            audioManager.openAudioConnection(voiceChannel);
-            audioManager.setSelfDeafened(true);
-        } else if (!audioManager.getConnectedChannel().equals(voiceChannel)) {
-            audioManager.openAudioConnection(voiceChannel);
+        try {
+            if (!audioManager.isConnected()) {
+                audioManager.openAudioConnection(voiceChannel);
+                audioManager.setSelfDeafened(true);
+            } else if (!audioManager.getConnectedChannel().equals(voiceChannel)) {
+                audioManager.openAudioConnection(voiceChannel);
+            }
+        } catch (net.dv8tion.jda.api.exceptions.InsufficientPermissionException e) {
+            reply(event, COLOR_ERROR, "I don't have permission to join/speak in that voice channel. Missing: `" + e.getPermission().getName() + "`");
+            return;
         }
 
         GuildMusicManager gmm = musicManager.get(guild);

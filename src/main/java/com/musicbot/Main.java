@@ -2,8 +2,11 @@ package com.musicbot;
 
 import com.musicbot.music.MusicManager;
 import io.github.cdimascio.dotenv.Dotenv;
+import moe.kyokobot.libdave.NativeDaveFactory;
+import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -41,6 +44,8 @@ public class Main {
                     )
                     .enableCache(CacheFlag.VOICE_STATE)
                     .setActivity(Activity.listening("music requests"))
+                    .setAudioModuleConfig(new AudioModuleConfig()
+                            .withDaveSessionFactory(new LDJDADaveSessionFactory(new NativeDaveFactory())))
                     .addEventListeners(new CommandListener(musicManager))
                     .build();
 
