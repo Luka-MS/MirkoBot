@@ -3,16 +3,17 @@ package com.musicbot.counting;
 /**
  * Safe recursive-descent arithmetic expression evaluator.
  *
- * Supports: +  -  *  /  //  %  ** and parentheses.
+ * Supports: +  -  *  /  //  %  ** (or ^) and parentheses.
+ * Functions: sqrt(), log() (base-10), ln() (natural), log2() (base-2).
  * Result must be a whole number (integer), otherwise an exception is thrown.
  * Exponents are capped at 100 to prevent denial-of-service via huge numbers.
  *
  * Grammar (informal):
- *   expr   = term   ( ('+' | '-') term   )*
- *   term   = power  ( ('*' | '/' | '//' | '%') power )*
- *   power  = unary  ( '**' power )?        ← right-associative
- *   unary  = ('-' | '+')? primary
- *   primary = NUMBER | '(' expr ')'
+ *   expr    = term   ( ('+' | '-') term   )*
+ *   term    = power  ( ('*' | '/' | '//' | '%') power )*
+ *   power   = unary  ( ('**' | '^') power )?   ← right-associative
+ *   unary   = ('-' | '+')? primary
+ *   primary = FUNC '(' expr ')' | '(' expr ')' | NUMBER
  */
 public class MathEvaluator {
 
@@ -92,12 +93,18 @@ public class MathEvaluator {
         return left;
     }
 
-    /** Right-associative: 2**3**2 == 2**(3**2) == 512 */
+    /** Right-associative: 2**3**2 == 2**(3**2) == 512.  Also accepts '^'. */
     private double parsePower() {
         double base = parseUnary();
         skipSpaces();
         if (pos + 1 < input.length() && input.charAt(pos) == '*' && input.charAt(pos + 1) == '*') {
             pos += 2;
+            double exp = parsePower();   // right-recursive
+            if (Math.abs(exp) > 100) throw new ArithmeticException("Exponent too large (> 100)");
+            return Math.pow(base, exp);
+        }
+        if (pos < input.length() && input.charAt(pos) == '^') {
+            pos++;
             double exp = parsePower();   // right-recursive
             if (Math.abs(exp) > 100) throw new ArithmeticException("Exponent too large (> 100)");
             return Math.pow(base, exp);
@@ -118,9 +125,32 @@ public class MathEvaluator {
         return parsePrimary();
     }
 
+    private static final String[] FUNCTIONS = {"sqrt", "log2", "log10", "log", "ln"};
+
     private double parsePrimary() {
         skipSpaces();
         if (pos >= input.length()) throw new ArithmeticException("Unexpected end of expression");
+
+        // Function call: sqrt(...), log(...), ln(...), log2(...), log10(...)
+        for (String func : FUNCTIONS) {
+            if (input.startsWith(func, pos)) {
+                int afterFunc = pos + func.length();
+                // Make sure it's followed by '(' (with optional spaces)
+                int peek = afterFunc;
+                while (peek < input.length() && input.charAt(peek) == ' ') peek++;
+                if (peek < input.length() && input.charAt(peek) == '(') {
+                    pos = peek + 1;  // consume func and '('
+                    double arg = parseExpr();
+                    skipSpaces();
+                    if (pos >= input.length() || input.charAt(pos) != ')') {
+                        throw new ArithmeticException("Missing closing parenthesis for " + func);
+                    }
+                    pos++;  // consume ')'
+                    skipSpaces();
+                    return applyFunction(func, arg);
+                }
+            }
+        }
 
         if (input.charAt(pos) == '(') {
             pos++;   // consume '('
@@ -144,6 +174,26 @@ public class MathEvaluator {
         }
         skipSpaces();
         return Double.parseDouble(input.substring(start, pos));
+    }
+
+    private double applyFunction(String func, double arg) {
+        switch (func) {
+            case "sqrt":
+                if (arg < 0) throw new ArithmeticException("sqrt of negative number");
+                return Math.sqrt(arg);
+            case "log":
+            case "log10":
+                if (arg <= 0) throw new ArithmeticException("log of non-positive number");
+                return Math.log10(arg);
+            case "ln":
+                if (arg <= 0) throw new ArithmeticException("ln of non-positive number");
+                return Math.log(arg);
+            case "log2":
+                if (arg <= 0) throw new ArithmeticException("log2 of non-positive number");
+                return Math.log(arg) / Math.log(2);
+            default:
+                throw new ArithmeticException("Unknown function: " + func);
+        }
     }
 
     private void skipSpaces() {

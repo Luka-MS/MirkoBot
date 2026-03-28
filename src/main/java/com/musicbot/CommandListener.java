@@ -72,6 +72,9 @@ public class CommandListener extends ListenerAdapter {
             case "resume"        -> handleResume(event);
             case "stop"          -> handleStop(event);
             case "skip"          -> handleSkip(event);
+            case "playnow",
+                 "nowplaying",
+                 "np"           -> handleNowPlaying(event);
             case "queue"         -> handleQueue(event);
             case "leave"         -> handleLeave(event);
             case "penis"         -> handlePenis(event);
@@ -200,6 +203,27 @@ public class CommandListener extends ListenerAdapter {
         String title = gmm.player.getPlayingTrack().getInfo().title;
         gmm.scheduler.skip();
         reply(event, COLOR_INFO, "Skipped **" + title + "**.");
+    }
+
+    private void handleNowPlaying(MessageReceivedEvent event) {
+        GuildMusicManager gmm = musicManager.get(event.getGuild());
+        AudioTrack track = gmm.player.getPlayingTrack();
+        if (track == null) {
+            reply(event, COLOR_ERROR, "Nothing is playing right now.");
+            return;
+        }
+        AudioTrackInfo info = track.getInfo();
+        long position = track.getPosition() / 1000;
+        long total = info.length / 1000;
+        EmbedBuilder eb = new EmbedBuilder()
+                .setTitle("Now Playing")
+                .setDescription("**" + info.title + "**")
+                .setColor(COLOR_SUCCESS)
+                .addField("Duration", info.isStream ? "Live" : formatDuration(position) + " / " + formatDuration(total), true)
+                .addField("Author", info.author, true);
+        if (info.artworkUrl != null) eb.setThumbnail(info.artworkUrl);
+        if (info.uri != null) eb.addField("URL", info.uri, false);
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     private void handleQueue(MessageReceivedEvent event) {
@@ -391,6 +415,7 @@ public class CommandListener extends ListenerAdapter {
                 .addField("`" + p + "resume`",          "Resume a paused song", false)
                 .addField("`" + p + "stop`",            "Stop and clear the entire queue", false)
                 .addField("`" + p + "skip`",            "Skip to the next song", false)
+                .addField("`" + p + "playnow`",         "Show what's currently playing", false)
                 .addField("`" + p + "queue`",           "Show the current queue", false)
                 .addField("`" + p + "leave`",           "Disconnect from the voice channel", false)
                 .addField("── Counting ──", "\u200b", false)
