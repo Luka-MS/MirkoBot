@@ -33,7 +33,8 @@ public class Main {
         String prefix = dotenv.get("PREFIX", "!");
         Config.initialize(prefix);
 
-        MusicManager musicManager = new MusicManager();
+        String ytRefreshToken = dotenv.get("YOUTUBE_REFRESH_TOKEN", "");
+        MusicManager musicManager = new MusicManager(ytRefreshToken);
 
         try {
             JDA jda = JDABuilder.createDefault(token)

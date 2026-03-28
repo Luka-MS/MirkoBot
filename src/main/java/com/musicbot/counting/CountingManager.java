@@ -3,11 +3,16 @@ package com.musicbot.counting;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Tracks the counting-game state for each guild.
  * All state is in memory only (resets on bot restart).
  */
 public class CountingManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(CountingManager.class);
 
     public static class State {
         public long channelId;
@@ -31,6 +36,7 @@ public class CountingManager {
     /** Sets (or resets) the counting channel for a guild. */
     public void setChannel(long guildId, long channelId) {
         data.put(guildId, new State(channelId));
+        logger.info("Counting channel set for guild {} -> channel {}", guildId, channelId);
     }
 
     /**
@@ -40,8 +46,11 @@ public class CountingManager {
      */
     public Long tryEvaluate(String text) {
         try {
-            return evaluator.evaluate(text);
+            long result = evaluator.evaluate(text);
+            logger.debug("Evaluated '{}' = {}", text, result);
+            return result;
         } catch (Exception e) {
+            logger.debug("Failed to evaluate '{}': {}", text, e.getMessage());
             return null;
         }
     }

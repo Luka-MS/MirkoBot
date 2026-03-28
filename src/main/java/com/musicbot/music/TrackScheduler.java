@@ -61,8 +61,15 @@ public class TrackScheduler extends AudioEventAdapter {
 
     /** Skips the current track and starts the next one (or stops if empty). */
     public void skip() {
-        // stop() -> onTrackEnd fires -> nextTrack() handles the queue
-        player.stopTrack();
+        AudioTrack next = queue.poll();
+        if (next != null) {
+            player.startTrack(next, false);
+        } else {
+            player.stopTrack();
+            if (onQueueEnd != null) {
+                onQueueEnd.run();
+            }
+        }
     }
 
     /** Stops playback and clears the queue. */
